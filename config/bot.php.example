@@ -1,0 +1,29 @@
+<?php
+  /**
+   * General bot settings controlling its behavior.
+   */
+  // Bot timezome setting and current date (Y-m-d). This is best set to the same as the source Google calendar.
+  date_default_timezone_set('America/Chicago');
+  $today = date('Y-m-d');
+  /**
+   * Respect all-day events. Don't generate a tweet until all-day events are complete (assumes midnight).
+   *  - 'false' = tweets/progress will begin immediately after event's start date/time.
+   *  - 'true' (bot default) = tweets will generate begining at midnight following event's start date.
+   * Option 'false' will cause a first "day of" tweet like `0% of the way from Event to Same Event!` and is more
+   *  or less unused (future improvement request). Would not recommend using 'false' in production.
+   */
+  $respectAllDayEvents = true;
+  /**
+   * Expected event cadence (default: 'day').
+   *  Set to 'hour' if expected interval between events is less than 24 hours.
+   *  This changes the math/diff in event calculations ('day' == greater precision).
+   *  Currently unused; provided for future iterations.
+   */
+  $expectedEventCadence = 'day';
+  /**
+   * Debug all the bot's calculations and output/response. Behaves independent of $debug_tweet, with nuance:
+   *  - if $debug_tweet is set = true, will include the full JSON response from the Twitter API post.
+   *  - if $debug_tweet is set = false, will only include the response ("Good/Bad Request") from the Twitter API post.
+   */
+  $debug_bot = false;
+?>

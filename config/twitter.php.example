@@ -1,0 +1,12 @@
+<?php
+  /**
+   * Authorization Keys from Twitter App and bot account
+   */
+  // Twitter User/Bot Token/Secret/Name
+  $token='112233445566';
+  $token_secret='778899AABBCC';
+  $token_account='botname';
+  // Twitter App Token/Secret
+  $consumer_key='FFEEDDCCBBAA';
+  $consumer_secret='998877665544';
+?>
