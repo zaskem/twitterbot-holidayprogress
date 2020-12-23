@@ -7,6 +7,7 @@
    *  - Google App Name
    *  - Google App API Key
    */
+  require_once('/path/to/vendor/autoload.php');
   putenv('GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/google/service/api/key/project-aabbcc-ddeeff.json');
   $calendarId = 'en.usa#holiday@group.v.calendar.google.com';
   $googleAppName = 'Your Google App Name Here';
