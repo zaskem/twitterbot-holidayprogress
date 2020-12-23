@@ -24,6 +24,10 @@
    * Debug all the bot's calculations and output/response. Behaves independent of $debug_tweet, with nuance:
    *  - if $debug_tweet is set = true, will include the full JSON response from the Twitter API post.
    *  - if $debug_tweet is set = false, will only include the response ("Good/Bad Request") from the Twitter API post.
+   * Debug format affords a raw PHP print_r of the debug information array (can be easier to examine in realtime).
+   *  - default ($debug_format): 'json'
+   *  - not specified/other: print_r
    */
-  $debug_bot = false;
+  $debug_bot = true;
+  $debug_format = 'json';
 ?>
