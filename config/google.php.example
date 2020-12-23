@@ -8,7 +8,7 @@
    *  - Google App API Key
    */
   putenv('GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/google/service/api/key/project-aabbcc-ddeeff.json');
-  $calendarId = 'aabbccddeeff@group.calendar.google.com';
+  $calendarId = 'en.usa#holiday@group.v.calendar.google.com';
   $googleAppName = 'Your Google App Name Here';
   $googleAppKey = '00112233445566778899AABBCCDDEEFF';
   /**
