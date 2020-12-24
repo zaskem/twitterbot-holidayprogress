@@ -6,5 +6,6 @@
   return array(
     'lastPercentComplete' => 0,
     'lastEventDate' => '2020-01-01',
-  );
+    'lastEventSummary' => 'Dummy text',
+);
 ?>
