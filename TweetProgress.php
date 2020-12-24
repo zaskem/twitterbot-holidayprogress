@@ -61,6 +61,10 @@
 
   // Calculate intervals/times/progress bar status
   $eventInterval = date_diff(date_create($leStart), date_create($start));
+  // Address the situation where we're in the middle of an all-day event (create an artificial duration to avoid div/0)
+  if ((0 == $eventInterval->days) && (0 == $eventInterval->h) && (0 == $eventInterval->i)) {
+    $eventInterval = date_diff(date_create($leStart), date_create($start . " 23:59:59"));
+  }
   $timePassed = date_diff(date_create($leStart), date_create());
   $percentComplete = intval((((($timePassed->days * 24) + $timePassed->h) * 60) + $timePassed->i) / (((($eventInterval->days * 24) + $eventInterval->h) * 60) + $eventInterval->i) * 100);
   $completeBars = min(intval($percentComplete / (100 / ($totalBars + 1))), $totalBars);
