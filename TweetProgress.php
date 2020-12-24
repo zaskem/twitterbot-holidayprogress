@@ -24,6 +24,32 @@
     return $client;
   }
 
+  /**
+   * getEventDate($sourceEvent, $eventType = 'next')
+   *  Simple function to return the string format of $sourceEvent's date/dateTime
+   *  - $sourceEvent = instance of Google_Service_Calendar_Event Object (not an array of events)
+   *  - $eventType = 'next' (default): nature of event. Possible options ('next','past'), though 
+   *      any argument other than 'next' is treated as 'past'
+   *      $eventType is used to nuance a default date if/when none exists.
+   * @return string the event date
+   */
+  function getEventDate($sourceEvent, $eventType = 'next') {
+    if (empty($sourceEvent)) {
+      // Default to today/now in unlikely situation $sourceEvent is empty
+        $year = ('next' == $eventType) ? date('Y') + 1 : date('Y') - 1;
+        $calcDate = "$year-01-01";
+    } else {
+      // If dateTime format is availble, prefer it (not an all-day event)
+      $calcDate = $sourceEvent->start->dateTime;
+      if (empty($calcDate)) {
+        // Use date format if dateTime isn't available (an all-day event)
+        $calcDate = $sourceEvent->start->date;
+      }
+    }
+    return $calcDate;
+  }
+
+
   // Get the API client and construct the service object.
   $client = getClient();
   $service = new Google_Service_Calendar($client);
@@ -32,43 +58,33 @@
   $lastResult = $service->events->listEvents($calendarId, $pastParams);
   $lastEvents = $lastResult->getItems();
   $lastEvent = end($lastEvents);
-
-  if (empty($lastEvent)) {
-    // Default to today/now if no history is found
-    $leStart = date_create();
-  } else {
-    $leStart = $lastEvent->start->dateTime;
-    if (empty($leStart)) {
-      $leStart = $lastEvent->start->date;
-    }
-  }
-
+  $leStart = getEventDate($lastEvent, $eventType = 'past');
+  
   // Obtain first upcoming event
   $results = $service->events->listEvents($calendarId, $futureParams);
   $events = $results->getItems();
   $nextEvent = reset($events);
-
-  if (empty($nextEvent)) {
-    // Default to next new year for no upcoming event
-    $nextYear = date('Y') + 1;
-    $start = "$nextYear-01-01";
-  } else {
-    $start = $nextEvent->start->dateTime;
-    if (empty($start)) {
-      $start = $nextEvent->start->date;
-    }
-  }
+  $start = getEventDate($nextEvent, $eventType = 'next');
 
   // Calculate intervals/times/progress bar status
   $eventInterval = date_diff(date_create($leStart), date_create($start));
-  // Address the situation where we're in the middle of an all-day event (create an artificial duration to avoid div/0)
-  if ((0 == $eventInterval->days) && (0 == $eventInterval->h) && (0 == $eventInterval->i)) {
-    $eventInterval = date_diff(date_create($leStart), date_create($start . " 23:59:59"));
+  // Address the situation where we're in an all-day event
+  if ((0 == $eventInterval->days) && (0 == $eventInterval->h) && (0 == $eventInterval->i)) { 
+    if ($respectAllDayEvents) { 
+      // Create an artificial duration (assume 23:59:59 to avoid div/0)
+      $eventInterval = date_diff(date_create($leStart), date_create($start . " 23:59:59"));
+    } else {
+      // Identify the "next" event (beyond the day) and recalculate, since we said it's okay to tweet during all-day events
+      $nextEvent = next($events);
+      $start = getEventDate($nextEvent, $eventType = 'next');
+      $eventInterval = date_diff(date_create($leStart), date_create($start));
+    }
   }
   $timePassed = date_diff(date_create($leStart), date_create());
   $percentComplete = intval((((($timePassed->days * 24) + $timePassed->h) * 60) + $timePassed->i) / (((($eventInterval->days * 24) + $eventInterval->h) * 60) + $eventInterval->i) * 100);
   $completeBars = min(intval($percentComplete / (100 / ($totalBars + 1))), $totalBars);
   $incompleteBars = $totalBars - $completeBars;
+
   // Debug information if necessary
   if($debug_bot) { $debug_info = array('lastEvent' => $lastEvent, 'nextEvent' => $nextEvent, 'eventInterval' => $eventInterval, 'timePassed' => $timePassed, 'percentComplete' => $percentComplete, 'completeBars' => $completeBars, 'incompleteBars' => $incompleteBars); }
 
@@ -85,8 +101,6 @@
       $debug_info['tweetText'] = $tweetText;
       $debug_info['tweetSubmitted'] = 'yes';
     }
-
-    //$result = '';
     $result = TweetPost($tweetText, $debug_tweet);
 /**
  * Prepare to normally tweet...if we should (see negative logic). We don't normally tweet when:
@@ -107,6 +121,7 @@
       $tweetText .= $remainingCharacter;
       $z++;
     }
+
     // Auxiliary/Ancillary text for the tweet
     $tweetText .= "\n\n$percentComplete% of the way ";
     if ($includeEventSummary) {
@@ -123,8 +138,6 @@
       $debug_info['tweetText'] = $tweetText;
       $debug_info['tweetSubmitted'] = 'yes';
     }
-
-    //$result = '';
     $result = TweetPost($tweetText, $debug_tweet);
 /**
  * Skip tweet
