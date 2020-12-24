@@ -76,7 +76,7 @@
  *      is for the _previous_ run of the bot script.
 */
   if ($lastEvent->getSummary() != $status['lastEventSummary']) {
-    $tweetText .= "Hooray! It's " . $lastEvent->getSummary() . "!";
+    $tweetText = "Hooray! It's " . $lastEvent->getSummary() . "!";
     if ($debug_bot) {
       $debug_info['tweetText'] = $tweetText;
       $debug_info['tweetSubmitted'] = 'yes';
