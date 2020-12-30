@@ -25,25 +25,27 @@
   }
 
   /**
-   * getEventDate($sourceEvent, $eventType = 'next')
+   * getEventDate($sourceEvent, $eventType = 'next', $start = true)
    *  Simple function to return the string format of $sourceEvent's date/dateTime
    *  - $sourceEvent = instance of Google_Service_Calendar_Event Object (not an array of events)
    *  - $eventType = 'next' (default): nature of event. Possible options ('next','past'), though 
    *      any argument other than 'next' is treated as 'past'
    *      $eventType is used to nuance a default date if/when none exists.
+   *  - $start = obtain the event's start (true) or end (false) time.
    * @return string the event date
    */
-  function getEventDate($sourceEvent, $eventType = 'next') {
+  function getEventDate($sourceEvent, $eventType = 'next', $start = true) {
+    global $allDayEventEndTime;
     if (empty($sourceEvent)) {
       // Default to today/now in unlikely situation $sourceEvent is empty
         $year = ('next' == $eventType) ? date('Y') + 1 : date('Y') - 1;
         $calcDate = "$year-01-01";
     } else {
       // If dateTime format is availble, prefer it (not an all-day event)
-      $calcDate = $sourceEvent->start->dateTime;
+      $calcDate = ($start) ? $sourceEvent->start->dateTime : $sourceEvent->end->dateTime;
       if (empty($calcDate)) {
-        // Use date format if dateTime isn't available (an all-day event)
-        $calcDate = $sourceEvent->start->date;
+        // Use date format if dateTime isn't available (an all-day event), add time for "end" dates
+        $calcDate = ($start) ? $sourceEvent->start->date : $sourceEvent->start->date . " " . $allDayEventEndTime;
       }
     }
     return $calcDate;
@@ -58,29 +60,36 @@
   $lastResult = $service->events->listEvents($calendarId, $pastParams);
   $lastEvents = $lastResult->getItems();
   $lastEvent = end($lastEvents);
-  $leStart = getEventDate($lastEvent, $eventType = 'past');
+  $leStart = getEventDate($lastEvent, $eventType = 'past', true);
+  $leEnd = getEventDate($lastEvent, $eventType = 'past', false);
   
   // Obtain first upcoming event
   $results = $service->events->listEvents($calendarId, $futureParams);
   $events = $results->getItems();
   $nextEvent = reset($events);
-  $start = getEventDate($nextEvent, $eventType = 'next');
+  $start = getEventDate($nextEvent, $eventType = 'next', true);
+  $end = getEventDate($nextEvent, $eventType = 'next', false);
 
-  // Calculate intervals/times/progress bar status
-  $eventInterval = date_diff(date_create($leStart), date_create($start));
-  // Address the situation where we're in an all-day event
-  if ((0 == $eventInterval->days) && (0 == $eventInterval->h) && (0 == $eventInterval->i)) { 
-    if ($respectAllDayEvents) { 
-      // Create an artificial duration (assume 23:59:59 to avoid div/0)
-      $eventInterval = date_diff(date_create($leStart), date_create($start . " 23:59:59"));
-    } else {
-      // Identify the "next" event (beyond the day) and recalculate, since we said it's okay to tweet during all-day events
-      $nextEvent = next($events);
-      $start = getEventDate($nextEvent, $eventType = 'next');
-      $eventInterval = date_diff(date_create($leStart), date_create($start));
-    }
+  $activeEvent = false;
+  $eventInterval = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create($start));
+  if ($leStart == $start) {
+    // Active event, grab the next one for and recalculate.
+    $nextEvent = next($events);
+    $start = getEventDate($nextEvent, $eventType = 'next', true);
+    $end = getEventDate($nextEvent, $eventType = 'next', false);
+    $eventInterval = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create($start));
+
+    // Allow override based on bot settings if an active all-day event hasn't ended
+    if ($respectEventDuration) {
+      if ($timeAtRun <= $leEnd) {
+        // Handle div/0 situation on the duration of an active all-day event
+        $eventInterval = date_diff(date_create($end), date_create($start));
+        $activeEvent = true;
+      }
+    } 
   }
-  $timePassed = date_diff(date_create($leStart), date_create());
+
+  $timePassed = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create());
   $percentComplete = intval((((($timePassed->days * 24) + $timePassed->h) * 60) + $timePassed->i) / (((($eventInterval->days * 24) + $eventInterval->h) * 60) + $eventInterval->i) * 100);
   $completeBars = min(intval($percentComplete / (100 / ($totalBars + 1))), $totalBars);
   $incompleteBars = $totalBars - $completeBars;
@@ -88,13 +97,13 @@
   // Debug information if necessary
   if($debug_bot) { $debug_info = array('lastEvent' => $lastEvent, 'nextEvent' => $nextEvent, 'eventInterval' => $eventInterval, 'timePassed' => $timePassed, 'percentComplete' => $percentComplete, 'completeBars' => $completeBars, 'incompleteBars' => $incompleteBars); }
 
-/**
- * We make a special tweet when we match that special circumstance when a holiday/event is reached the first time.
- *  Tweet a little differently (celebrate!)
- *  - this is the FIRST TIME we've seen this event title/summary.
- *      The logic looks weird because $lastEvent->getSummary() is for the _current_ run and $status['lastEventSummary']
- *      is for the _previous_ run of the bot script.
-*/
+  /**
+   * We make a special tweet when we match that special circumstance when a holiday/event is reached the first time.
+   *  Tweet a little differently (celebrate!)
+   *  - this is the FIRST TIME we've seen this event title/summary.
+   *      The logic looks weird because $lastEvent->getSummary() is for the _current_ run and $status['lastEventSummary']
+   *      is for the _previous_ run of the bot script.
+  */
   if ($lastEvent->getSummary() != $status['lastEventSummary']) {
     $tweetText = "Hooray! It's " . $lastEvent->getSummary() . "!";
     if ($debug_bot) {
@@ -102,12 +111,12 @@
       $debug_info['tweetSubmitted'] = 'yes';
     }
     $result = TweetPost($tweetText, $debug_tweet);
-/**
- * Prepare to normally tweet...if we should (see negative logic). We don't normally tweet when:
- *  - an active all-day event is happening today (no tweet)
- *  - the percent complete hasn't changed since our last go (no tweet)
- */
-  } else if (!((($respectAllDayEvents) && ($leStart == $today)) || ($percentComplete == $status['lastPercentComplete']))) {
+  /**
+   * Prepare to normally tweet...if we should (see negative logic). We don't normally tweet when:
+   *  - an active event is happening today (no tweet), unless we don't respect active events
+   *  - the percent complete hasn't changed since our last go (no tweet)
+   */
+  } else if (!((($respectEventDuration) && ($activeEvent)) || ($percentComplete == $status['lastPercentComplete']))) {
     // Craft a traditional tweet text
     $tweetText = "";
     // Progress bar creation...
@@ -139,12 +148,12 @@
       $debug_info['tweetSubmitted'] = 'yes';
     }
     $result = TweetPost($tweetText, $debug_tweet);
-/**
- * Skip tweet
- */
+  /**
+   * Skip tweet
+   */
   } else {
     // We skipped tweeting for a reason
-    if ($debug_bot) { $debug_info['skippedSameDay'] = (($respectAllDayEvents) && ($start == $today)) ? 'yes' : 'no'; }
+    if ($debug_bot) { $debug_info['skippedActiveEvent'] = (($respectEventDuration) && ($activeEvent)) ? 'yes' : 'no'; }
     if ($debug_bot) { $debug_info['skippedSamePercent'] = ($percentComplete == $status['lastPercentComplete']) ? 'yes' : 'no'; }
     if ($debug_bot) { $debug_info['skippedSameSummary'] = ($lastEvent->getSummary() == $status['lastEventSummary']) ? 'yes' : 'no'; }
     // Craft $result response for skipped tweet
