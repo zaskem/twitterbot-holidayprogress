@@ -5,12 +5,20 @@
   // Bot timezome setting and current date (Y-m-d). This is best set to the same as the source Google calendar.
   date_default_timezone_set('America/Chicago');
   $today = date('Y-m-d');
+  $timeAtRun = date('Y-m-d H:i:s');
   /**
-   * Respect all-day events. Don't generate a tweet until all-day events are complete (assumes 23:59:59/midnight).
+   * Respect event duration. Don't generate a tweet until events are complete (assumes $allDayEventEndTime for all-day events).
    *  - 'false' = tweets/progress will begin immediately after event's first announcement/start date/time.
    *  - 'true' (bot default) = tweets will generate begining at midnight _after_ event's start date.
    */
-  $respectAllDayEvents = true;
+  $respectEventDuration = true;
+  /**
+   * Set a bot standard "end time" for all-day events. Things to note:
+   *  - Flexibly sets the "end" of all-day events to whatever desired (end of "work day," etc., versus midnight);
+   *  - When `$respectEventDuration = false` the "end time" for all-day events will be the "start time" for the "last" event (this setting doesn't apply).
+   * String format should be `hh:mm:ss` Default: 23:59:59 (midnight)
+   */
+  $allDayEventEndTime = '23:59:59';
   /**
    * Expected event cadence (default: 'day').
    *  Set to 'hour' if expected interval between events is less than 24 hours.
