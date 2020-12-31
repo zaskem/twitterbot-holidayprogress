@@ -45,7 +45,7 @@
       $calcDate = ($start) ? $sourceEvent->start->dateTime : $sourceEvent->end->dateTime;
       if (empty($calcDate)) {
         // Use date format if dateTime isn't available (an all-day event), add time for "end" dates
-        $calcDate = ($start) ? $sourceEvent->start->date : $sourceEvent->start->date . " " . $allDayEventEndTime;
+        $calcDate = ($start) ? $sourceEvent->start->date : $sourceEvent->end->date . " " . $allDayEventEndTime;
       }
     }
     return $calcDate;
