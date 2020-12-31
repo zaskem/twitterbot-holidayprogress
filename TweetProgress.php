@@ -44,7 +44,7 @@
       // If dateTime format is availble, prefer it (not an all-day event)
       $calcDate = ($start) ? $sourceEvent->start->dateTime : $sourceEvent->end->dateTime;
       if (empty($calcDate)) {
-        // Use date format if dateTime isn't available (an all-day event), add time for "end" dates
+        // Use date format if dateTime isn't available (an all-day event), add time for "end" dates.
         $calcDate = ($start) ? $sourceEvent->start->date : $sourceEvent->start->date . " " . $allDayEventEndTime;
       }
     }
@@ -71,24 +71,24 @@
 
   $activeEvent = false;
   $eventInterval = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create($start));
+  $timePassed = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create());
   if ($leStart == $start) {
-    // Active event, grab the next one for and recalculate.
-    $nextEvent = next($events);
-    $start = getEventDate($nextEvent, $eventType = 'next', true);
-    $end = getEventDate($nextEvent, $eventType = 'next', false);
-    $eventInterval = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create($start));
-
-    // Allow override based on bot settings if an active all-day event hasn't ended
     if ($respectEventDuration) {
       if ($timeAtRun <= $leEnd) {
-        // Handle div/0 situation on the duration of an active all-day event
-        $eventInterval = date_diff(date_create($end), date_create($start));
+        // Handle div/0 and calculation inversion situation for an active all-day event
+        $eventInterval = date_diff(date_create($leStart), date_create($leEnd));
+        $timePassed = date_diff(date_create($leStart), date_create());
         $activeEvent = true;
       }
-    } 
+    } else {
+      // Active event but we don't care (tweet progress), grab the next one and recalculate.
+      $nextEvent = next($events);
+      $start = getEventDate($nextEvent, $eventType = 'next', true);
+      $end = getEventDate($nextEvent, $eventType = 'next', false);
+      $eventInterval = date_diff(date_create($leStart), date_create($start));
+    }
   }
 
-  $timePassed = date_diff(date_create(($respectEventDuration) ? $leEnd : $leStart), date_create());
   $percentComplete = intval((((($timePassed->days * 24) + $timePassed->h) * 60) + $timePassed->i) / (((($eventInterval->days * 24) + $eventInterval->h) * 60) + $eventInterval->i) * 100);
   $completeBars = min(intval($percentComplete / (100 / ($totalBars + 1))), $totalBars);
   $incompleteBars = $totalBars - $completeBars;
