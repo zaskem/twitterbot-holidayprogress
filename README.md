@@ -1,7 +1,7 @@
 # twitterbot-holidayprogress
-A novelty bot written in PHP to tweet the progress toward and announcement of the next holiday/event. General idea inspired by the [Year Progress](https://twitter.com/year_progress) bot.
+A [novelty bot](https://twitter.com/holidayprogress) written in PHP to tweet the progress toward and announcement of the next holiday/event. General idea inspired by the [Year Progress](https://twitter.com/year_progress) bot.
 
-Data is sourced from Google calendar (public or shared) via the Google Calendar API, analyzed, and tweeted via Twitter's API with a homegrown `statuses/update.json` POST implementation.
+Data is sourced from Google calendar (public or shared) via the Google Calendar API, analyzed/calculated, and pushed to the world via Twitter's API with a homegrown `statuses/update.json` POST implementation.
 
 ## Requirements
 To run the bot code, the following libraries/accounts/things are required:
@@ -14,15 +14,15 @@ To run the bot code, the following libraries/accounts/things are required:
 * A host on which to run this code (not at a browsable path).
 
 ### Google API
-Creating a project, creating a service account and key for the Google API falls outside the scope of this README. At a minimum, a project must be available on the [Google API Console](https://console.developers.google.com) and a Service Accont with an automatically-generated key pair created. As the bot is a consumer of the Google API, no special permissions are required for the service account. You will need the key name/ID and associated `.json` file.
+Creating a project, creating a service account and key for the Google API falls outside the scope of this README. At a minimum, a project must be available on the [Google API Console](https://console.developers.google.com) and a Service Account with an automatically-generated key pair created. As the bot is a consumer of the Google API, no special permissions are required for the service account. You will need the key name/ID and associated `.json` file.
 
 ### Twitter API
-Applying for access to the [Twitter Developer Portal](https://developer.twitter.com/) is outside the scope of this README. You will need to create a new Project and/or App for the Twitter bot, configure the App permissions to allow `Read and Write` access. You will obtain the `consumer_key` and `consumer_secret` from the App's keys and tokens page.
+Applying for access to the [Twitter Developer Portal](https://developer.twitter.com/) is outside the scope of this README. You will need to create a new Project and/or App for the Twitter bot and configure the App permissions to allow `Read and Write` access. You will obtain the `consumer_key` and `consumer_secret` from the App's keys and tokens page.
 
 Assuming the account associated with the Developer Portal is _not_ the bot account, you will need to enable `3-Legged OAuth` for the App. This is required to generate a user access token and secret for an independent bot account.
 
 #### A note about generating user access tokens and secrets:
-This repo does not include a library/mechanism to address user access and callback for the bot app, which is ___required___ to generate a user access token and secret, and is a one-time action. It is recommended to use [Twurl](https://developer.twitter.com/en/docs/tutorials/using-twurl) for its simplicity, in particular the following short steps on a local WSL/Ubuntu instance independent of the bot host:
+This repo does not include a library/mechanism to address user access and callback for the bot app, which is ___required___ to generate a user access token and secret, and is generally a one-time action. It is recommended to use [Twurl](https://developer.twitter.com/en/docs/tutorials/using-twurl) for its simplicity. The following steps on a local WSL or Ubuntu instance (independent of the bot host if necessary) will generate the token and secret:
 
 1. `gem install twurl` (to install Twurl, also requires ruby)
 2. `twurl authorize --consumer-key key --consumer-secret secret` (with your Twitter App key/secret, follow prompts)
@@ -54,7 +54,7 @@ The above will run the bot script every 15 minutes, which would adequately tweet
 ## Tweet Posting
 By design, `TweetProgress.php` will _not_ attempt to post a tweet if the progress percentage hasn't changed (and some other scenarios). The debug information in `skipped*` values will identify reasons for a skipped post.
 
-`TweetPost.php` should require no direct modification or attention. It is a self-contained homegrown mechanism to generate a valid OAuth signature and POST a status update request to Twitter's API. Using `TweetPost.php` removes the need for third-party libraries (such as Twurl) on the production bot host to _tweet updates_. That said, the bot itself (`TweetProgress.php`) can be easily modified to use a library such as Twurl if available/desired.
+`TweetPost.php` should require no direct modification or attention. It is a self-contained homegrown mechanism to generate a valid OAuth signature and POST a status update request to Twitter's API with cURL. Using `TweetPost.php` removes the need for third-party libraries (such as Twurl) on the production bot host to _tweet updates_. That said, the bot itself (`TweetProgress.php`) can be easily modified to use a library such as Twurl if available/desired.
 
 ## Troubleshooting and Tweet Posting
 This bot doesn't have a lot of moving parts, so there's not a lot to troubleshoot. There are two likely problems to troubleshoot:
