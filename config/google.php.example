@@ -20,6 +20,7 @@
     'orderBy' => 'startTime',
     'singleEvents' => true,
     'timeMin' => date('c'),
+    'timeZone' => 'America/Chicago',
   );
   /**
    * Parameters for querying past events. Important to note:
@@ -34,5 +35,6 @@
     'singleEvents' => true,
     'timeMin' => date('c', strtotime('-3 months')),
     'timeMax' => date('c'),
+    'timeZone' => 'America/Chicago',
   );
 ?>

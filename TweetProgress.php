@@ -51,7 +51,6 @@
     return $calcDate;
   }
 
-
   // Get the API client and construct the service object.
   $client = getClient();
   $service = new Google_Service_Calendar($client);
