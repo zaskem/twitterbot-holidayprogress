@@ -1,3 +1,4 @@
+# Twitter Holiday Progress Bot
 The [holiday progress bot](https://twitter.com/holidayprogress) was developed as a novelty bot/project by [@zaskem](https://github.com/zaskem) to play with the Twitter API. For reasons including but not limited to [stubbornness](https://twitter.com/dabit3/status/1340800853217849344/photo/1), this project evolved to include a homegrown OAuth Tweet posting script based on information provided by Twitter. Having a custom posting script bypasses the need to include a full library/utility such as Twurl on the production bot host. Developing such a script also provided ample opportunity for cursing, because 2020 definitely needed more cursing. Just doing my part.
 
 The general idea for this bot was inspired by the [Year Progress](https://twitter.com/year_progress) bot.
