@@ -1,4 +1,4 @@
-# twitterbot-holidayprogress
+# Twitter Holiday Progress Bot
 A [novelty bot](https://twitter.com/holidayprogress) written in PHP to tweet the progress toward and announcement of the next holiday/event. General idea inspired by the [Year Progress](https://twitter.com/year_progress) bot.
 
 Data is sourced from Google calendar (public or shared) via the Google Calendar API, analyzed/calculated, and pushed to the world via Twitter's API with a homegrown `statuses/update.json` POST implementation.
@@ -8,6 +8,7 @@ To run the bot code, the following libraries/accounts/things are required:
 
 * [Google APIs Client Library for PHP](https://github.com/googleapis/google-api-php-client) must be installed/available on the bot host;
 * A project with service account and key pair from the [Google API Console](https://console.developers.google.com);
+* An event source Google calendar such as "[Holidays in the United States](https://calendar.google.com/calendar/embed?src=en.usa%23holiday%40group.v.calendar.google.com&ctz=America%2FChicago)";
 * A bot/user account on Twitter for tweets;
 * A project and app configured on the [Twitter Developer Portal](https://developer.twitter.com/);
 * A manner by which you can generate an OAuth token and grant permission to the app for the bot account as necessary; and
