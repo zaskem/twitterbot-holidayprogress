@@ -53,7 +53,7 @@ function TweetPost($tweetText, $debug = false) {
   $json = curl_exec($curl_request);
   curl_close($curl_request);
 
-  if (array_key_exists("errors", json_decode($json))) {
+  if (array_key_exists("errors", json_decode($json, true))) {
     return ($debug) ? "Bad Request: $json" : "Bad Request";
   } else {
     return ($debug) ? "Good Request: $json" : "Good Request";
