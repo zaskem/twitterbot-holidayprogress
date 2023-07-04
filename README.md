@@ -1,4 +1,6 @@
 # Twitter Holiday Progress Bot
+___IMPORTANT NOTE:___ The Twitter Holiday Progress Bot was officially shut down in February 2023 due to Twitter's API changes. As a result this repository has been archived and under no further development.
+
 A [novelty bot](https://twitter.com/holidayprogress) written in PHP to tweet the progress toward and announcement of the next holiday/event. General idea inspired by the [Year Progress](https://twitter.com/year_progress) bot.
 
 Data is sourced from Google calendar (public or shared) via the Google Calendar API, analyzed/calculated, and pushed to the world via Twitter's API with a homegrown `statuses/update.json` POST implementation.
